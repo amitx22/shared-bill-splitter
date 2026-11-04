@@ -1,0 +1,8 @@
+{
+    "rewrites":[
+        {
+            "source": "/api/(.*)",
+            "destination": "https://bill-splitter-api.amitx22-splitmate.workers.dev/api/$1"
+        }
+    ]
+}

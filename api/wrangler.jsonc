@@ -1,18 +1,26 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "bill-splitter-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-05-22",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": {
-    "enabled": true
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "bill-splitter",
-      "database_id": "local-only",
-      "migrations_dir": "migrations"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "bill-splitter-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-05-22",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "bill-splitter",
+			"database_id": "f6c9d2da-7934-4289-95de-f1df991497a9",
+			"migrations_dir": "migrations"
+		},
+		{
+			"binding": "bill_splitter",
+			"database_name": "bill-splitter",
+			"database_id": "f6c9d2da-7934-4289-95de-f1df991497a9",
+			"remote": true
+		}
+	]
 }
