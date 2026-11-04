@@ -4,6 +4,7 @@
 
 The application focuses on accurate monetary calculations, reliable payment processing, and persistent data storage.
 
+## Live Demo: https://splitmate-kappa-three.vercel.app/
 ---
 
 ## 🚀 Features
