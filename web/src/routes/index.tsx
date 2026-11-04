@@ -36,7 +36,10 @@ type HomeData = {
   bills: Bill[]
 }
 
-async function api<T>(url: string, options?: RequestInit): Promise<T> {
+async function api<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -49,7 +52,7 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
   let data: unknown = null
 
   try {
-    data = text ? (JSON.parse(text) as unknown) : null
+    data = text ? JSON.parse(text) : null
   } catch {
     throw new Error('Invalid response received from server')
   }
@@ -81,10 +84,12 @@ function Home() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
-  // Restore saved home and its data after page refresh
+  // Restore saved home after refresh
   useEffect(() => {
     if (!homeId) {
-      const savedHomeId = localStorage.getItem('splitmate-home-id')
+      const savedHomeId = localStorage.getItem(
+        'splitmate-home-id'
+      )
 
       if (savedHomeId) {
         setHomeId(savedHomeId)
@@ -99,7 +104,9 @@ function Home() {
       try {
         setLoading(true)
 
-        const data = await api<HomeData>(`/api/homes/${homeId}`)
+        const data = await api<HomeData>(
+          `/api/homes/${homeId}`
+        )
 
         if (cancelled) return
 
@@ -107,9 +114,9 @@ function Home() {
         setMembers(data.members)
         setBills(data.bills)
 
-        const balanceData = await api<{ balances: Balance[] }>(
-          `/api/homes/${homeId}/balances`
-        )
+        const balanceData = await api<{
+          balances: Balance[]
+        }>(`/api/homes/${homeId}/balances`)
 
         if (cancelled) return
 
@@ -118,7 +125,9 @@ function Home() {
       } catch (error) {
         if (!cancelled) {
           setMessage(
-            error instanceof Error ? error.message : 'Failed to load home'
+            error instanceof Error
+              ? error.message
+              : 'Failed to load home'
           )
         }
       } finally {
@@ -143,6 +152,7 @@ function Home() {
   const money = (cents: number) =>
     `₹${(cents / 100).toFixed(2)}`
 
+  // Create a new home
   async function createHome() {
     if (!homeName.trim()) {
       setMessage('Enter home name')
@@ -152,38 +162,73 @@ function Home() {
     try {
       setLoading(true)
 
-      const data = await api<{ id: string; name: string }>(
-        '/api/homes',
-        {
-          method: 'POST',
-          body: JSON.stringify({ name: homeName }),
-        }
-      )
+      const data = await api<{
+        id: string
+        name: string
+      }>('/api/homes', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: homeName.trim(),
+        }),
+      })
 
       setHomeId(data.id)
       setHomeName(data.name)
 
-      // Save home ID for future visits
-      localStorage.setItem('splitmate-home-id', data.id)
+      localStorage.setItem(
+        'splitmate-home-id',
+        data.id
+      )
 
-      setMessage(`Home "${data.name}" created successfully!`)
+      setMessage(
+        `Home "${data.name}" created successfully!`
+      )
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error')
+      setMessage(
+        error instanceof Error ? error.message : 'Error'
+      )
     } finally {
       setLoading(false)
     }
   }
 
+  // Switch to new home creation mode
+  function createAnotherHome() {
+    if (loading) return
+
+    const confirmed = window.confirm(
+      'Create another home? Your current home and its data will remain saved.'
+    )
+
+    if (!confirmed) return
+
+    localStorage.removeItem('splitmate-home-id')
+
+    setHomeId('')
+    setHomeName('')
+    setMemberName('')
+    setMembers([])
+    setBillTitle('')
+    setAmount('')
+    setBills([])
+    setBalances([])
+
+    setMessage(
+      'You can now create another home!'
+    )
+  }
+
   async function refreshBalances() {
     if (!homeId) return
 
-    const data = await api<{ balances: Balance[] }>(
-      `/api/homes/${homeId}/balances`
-    )
+    const data = await api<{
+      balances: Balance[]
+    }>(`/api/homes/${homeId}/balances`)
 
     setBalances(data.balances)
   }
 
+  // Add member
   async function addMember() {
     if (!homeId) {
       setMessage('Create your home first')
@@ -202,7 +247,9 @@ function Home() {
         `/api/homes/${homeId}/members`,
         {
           method: 'POST',
-          body: JSON.stringify({ name: memberName }),
+          body: JSON.stringify({
+            name: memberName.trim(),
+          }),
         }
       )
 
@@ -212,12 +259,15 @@ function Home() {
       await refreshBalances()
       setMessage(`${data.name} added successfully!`)
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error')
+      setMessage(
+        error instanceof Error ? error.message : 'Error'
+      )
     } finally {
       setLoading(false)
     }
   }
 
+  // Add bill
   async function addBill() {
     const value = Number(amount)
 
@@ -244,7 +294,7 @@ function Home() {
         {
           method: 'POST',
           body: JSON.stringify({
-            title: billTitle,
+            title: billTitle.trim(),
             totalCents: Math.round(value * 100),
           }),
         }
@@ -257,25 +307,34 @@ function Home() {
       await refreshBalances()
       setMessage('Bill created and split successfully!')
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Error')
+      setMessage(
+        error instanceof Error ? error.message : 'Error'
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  async function payShare(billId: string, shareId: string) {
+  // Mark share as paid
+  async function payShare(
+    billId: string,
+    shareId: string
+  ) {
     try {
       setLoading(true)
 
       const data = await api<{
         id: string
         paidAt: string
-      }>(`/api/bills/${billId}/shares/${shareId}/pay`, {
-        method: 'POST',
-        headers: {
-          'Idempotency-Key': crypto.randomUUID(),
-        },
-      })
+      }>(
+        `/api/bills/${billId}/shares/${shareId}/pay`,
+        {
+          method: 'POST',
+          headers: {
+            'Idempotency-Key': crypto.randomUUID(),
+          },
+        }
+      )
 
       setBills(prev =>
         prev.map(bill =>
@@ -284,7 +343,10 @@ function Home() {
                 ...bill,
                 shares: bill.shares.map(share =>
                   share.id === shareId
-                    ? { ...share, paidAt: data.paidAt }
+                    ? {
+                        ...share,
+                        paidAt: data.paidAt,
+                      }
                     : share
                 ),
               }
@@ -296,7 +358,9 @@ function Home() {
       setMessage('Payment marked as paid!')
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : 'Payment failed'
+        error instanceof Error
+          ? error.message
+          : 'Payment failed'
       )
     } finally {
       setLoading(false)
@@ -340,9 +404,19 @@ function Home() {
           </button>
 
           {homeId && (
-            <p style={{ fontSize: 12, color: '#64748b' }}>
-              Home ID: {homeId}
-            </p>
+            <>
+              <p style={{ fontSize: 12, color: '#64748b' }}>
+                Home ID: {homeId}
+              </p>
+
+              <button
+                onClick={createAnotherHome}
+                style={anotherHomeButtonStyle}
+                disabled={loading}
+              >
+                + Create Another Home
+              </button>
+            </>
           )}
         </section>
 
@@ -403,13 +477,19 @@ function Home() {
           <button
             onClick={addBill}
             style={buttonStyle}
-            disabled={loading || !homeId || members.length === 0}
+            disabled={
+              loading ||
+              !homeId ||
+              members.length === 0
+            }
           >
             Add Bill
           </button>
 
           {homeId && members.length === 0 && (
-            <p>Add at least one member before creating a bill.</p>
+            <p>
+              Add at least one member before creating a bill.
+            </p>
           )}
         </section>
 
@@ -440,9 +520,14 @@ function Home() {
                   )
 
                   return (
-                    <div key={share.id} style={shareStyle}>
+                    <div
+                      key={share.id}
+                      style={shareStyle}
+                    >
                       <div>
-                        <strong>{member?.name || 'Member'}</strong>
+                        <strong>
+                          {member?.name || 'Member'}
+                        </strong>
                         <p style={{ margin: '5px 0' }}>
                           {money(share.amountCents)}
                         </p>
@@ -456,7 +541,9 @@ function Home() {
                         <button
                           style={payButtonStyle}
                           disabled={loading}
-                          onClick={() => payShare(bill.id, share.id)}
+                          onClick={() =>
+                            payShare(bill.id, share.id)
+                          }
                         >
                           Mark Paid
                         </button>
@@ -477,9 +564,14 @@ function Home() {
             <p>No outstanding balances yet.</p>
           ) : (
             balances.map(balance => (
-              <div key={balance.memberId} style={shareStyle}>
+              <div
+                key={balance.memberId}
+                style={shareStyle}
+              >
                 <strong>{balance.name}</strong>
-                <strong>{money(balance.outstandingCents)}</strong>
+                <strong>
+                  {money(balance.outstandingCents)}
+                </strong>
               </div>
             ))
           )}
@@ -526,6 +618,16 @@ const buttonStyle = {
   borderRadius: 8,
   padding: '12px 20px',
   cursor: 'pointer',
+}
+
+const anotherHomeButtonStyle = {
+  background: '#16a34a',
+  color: '#fff',
+  border: 'none',
+  borderRadius: 8,
+  padding: '12px 20px',
+  cursor: 'pointer',
+  marginTop: 10,
 }
 
 const billStyle = {
