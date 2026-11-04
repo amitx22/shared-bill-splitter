@@ -185,7 +185,7 @@ The implementation was integrated, tested, and verified as part of the developme
 
 ## 👨‍💻 Author
 
-**Amit Kumar**
+**Amit Kumar Singh**
 
 - GitHub: [@amitx22](https://github.com/amitx22)
 - Project Repository: [Shared Bill Splitter](https://github.com/amitx22/shared-bill-splitter)
